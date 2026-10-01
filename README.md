@@ -46,6 +46,7 @@ Commands
 - /astools or /ast : Give yourself all the armor stand tools (Note: Saves & clears your inventory which is restored by
   running this command again)
 - /astools reload : Reload the config file
+- /astools version : Show the plugin and server version (also works from the console)
 - /ascmd add \<priority\> \<delay\> \<player/console/bungee\> \<command/bungee_server_name\> : Add an assigned command
   to the nearest armor stand. See the assigning commands section below for more info.
 - /ascmd remove \<command_number\> : Remove a command from to the nearest armor stand (use /ascmd list to find the

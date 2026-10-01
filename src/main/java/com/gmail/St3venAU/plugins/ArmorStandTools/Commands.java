@@ -1,5 +1,6 @@
 package com.gmail.St3venAU.plugins.ArmorStandTools;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -19,11 +20,15 @@ class Commands implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, String[] args) {
+        final String cmd = command.getName().toLowerCase();
         if (!(sender instanceof final Player p)) {
+            if (cmd.equals("astools") && isVersionRequest(args)) {
+                sendVersion(sender);
+                return true;
+            }
             AST.plugin.getLogger().warning(Config.notConsole);
             return false;
         }
-        final String cmd = command.getName().toLowerCase();
         if (cmd.equals("astools") || cmd.equals("ast")) {
             if (Config.useCommandForTextInput && args.length > 0) {
                 final StringBuilder sb = new StringBuilder();
@@ -36,6 +41,10 @@ class Commands implements CommandExecutor, TabCompleter {
                 if (AST.processInput(p, sb.toString())) {
                     return true;
                 }
+            }
+            if (isVersionRequest(args)) {
+                sendVersion(p);
+                return true;
             }
             if (!Utils.hasPermissionNode(p, "astools.command")) {
                 p.sendMessage(ChatColor.RED + Config.noCommandPerm);
@@ -232,6 +241,15 @@ class Commands implements CommandExecutor, TabCompleter {
         return closestAs;
     }
 
+    private static boolean isVersionRequest(String[] args) {
+        return args.length == 1 && args[0].equalsIgnoreCase("version");
+    }
+
+    private static void sendVersion(CommandSender sender) {
+        sender.sendMessage(ChatColor.GREEN + "ArmorStandTools " + AST.plugin.getPluginMeta().getVersion()
+                + ChatColor.GRAY + " on " + Bukkit.getName() + " " + Bukkit.getMinecraftVersion());
+    }
+
     public List<String> onTabComplete(@NotNull CommandSender sender, Command command, @NotNull String alias, String[]
             args) {
         final List<String> list = new ArrayList<>();
@@ -240,7 +258,15 @@ class Commands implements CommandExecutor, TabCompleter {
         if (args.length > 0) {
             typed = args[args.length - 1].toLowerCase();
         }
-        if (cmd.equals("ascmd")) {
+        if (cmd.equals("astools")) {
+            if (args.length == 1) {
+                for (String s : Arrays.asList("reload", "version")) {
+                    if (s.startsWith(typed)) {
+                        list.add(s);
+                    }
+                }
+            }
+        } else if (cmd.equals("ascmd")) {
             if (args.length == 1) {
                 for (String s : Arrays.asList("list", "remove", "add", "cooldown")) {
                     if (s.startsWith(typed)) {
