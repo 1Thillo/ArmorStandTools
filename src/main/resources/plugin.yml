@@ -1,7 +1,7 @@
 main: com.gmail.St3venAU.plugins.ArmorStandTools.AST
 name: ArmorStandTools
 version: ${project.version}
-api-version: 1.17
+api-version: '26.2'
 author: St3venAU
 description: Armor stand manipulation tools
 softdepend: [ WorldGuard, PlotSquared, ChestShop , ShopGUIPlus ]
