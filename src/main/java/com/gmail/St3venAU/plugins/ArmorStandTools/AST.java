@@ -65,6 +65,7 @@ public class AST extends JavaPlugin {
         plugin = this;
         toolKey = new NamespacedKey(AST.plugin, "ArmorStandTool");
         getServer().getPluginManager().registerEvents(new MainListener(), this);
+        getServer().getPluginManager().registerEvents(new ToolProtectionListener(), this);
         getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
         final Commands cmds = new Commands();
         PluginCommand command = getCommand("astools");
@@ -206,7 +207,10 @@ public class AST extends JavaPlugin {
         final ItemStack[] newItems = plrInv.getContents().clone();
         plrInv.setContents(savedInv);
         savedInventories.remove(uuid);
-        for (ItemStack i : newItems) {
+        p.setItemOnCursor(Utils.withoutTools(p.getItemOnCursor()));
+        for (ItemStack item : newItems) {
+            // A bundle picked up while editing could still carry a tool
+            final ItemStack i = Utils.withoutTools(item);
             if (i == null)
                 continue;
             final Map<Integer, ItemStack> couldntFit = plrInv.addItem(i);
