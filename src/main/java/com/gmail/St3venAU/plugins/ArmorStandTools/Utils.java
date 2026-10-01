@@ -1,5 +1,6 @@
 package com.gmail.St3venAU.plugins.ArmorStandTools;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
@@ -10,6 +11,7 @@ import org.bukkit.block.ShulkerBox;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntitySnapshot;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.*;
@@ -17,7 +19,6 @@ import org.bukkit.inventory.meta.BlockStateMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
-import org.bukkit.util.EulerAngle;
 import org.bukkit.util.Vector;
 
 import java.text.DecimalFormat;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Utils {
@@ -53,29 +55,6 @@ public class Utils {
                 }
             }
         }
-    }
-
-    static int disabledSlotsAsInteger(ArmorStand as) {
-        return (as.hasEquipmentLock(EquipmentSlot.HAND, ArmorStand.LockType.ADDING_OR_CHANGING) ? 1 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.FEET, ArmorStand.LockType.ADDING_OR_CHANGING) ? 2 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.LEGS, ArmorStand.LockType.ADDING_OR_CHANGING) ? 4 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.CHEST, ArmorStand.LockType.ADDING_OR_CHANGING) ? 8 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.ADDING_OR_CHANGING) ? 16 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.OFF_HAND, ArmorStand.LockType.ADDING_OR_CHANGING) ? 32 : 0)
-
-                + (as.hasEquipmentLock(EquipmentSlot.HAND, ArmorStand.LockType.REMOVING_OR_CHANGING) ? 256 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.FEET, ArmorStand.LockType.REMOVING_OR_CHANGING) ? 512 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.LEGS, ArmorStand.LockType.REMOVING_OR_CHANGING) ? 1024 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.CHEST, ArmorStand.LockType.REMOVING_OR_CHANGING) ? 2048 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING) ? 4096 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.OFF_HAND, ArmorStand.LockType.REMOVING_OR_CHANGING) ? 8192 : 0)
-
-                + (as.hasEquipmentLock(EquipmentSlot.HAND, ArmorStand.LockType.ADDING) ? 65536 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.FEET, ArmorStand.LockType.ADDING) ? 131072 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.LEGS, ArmorStand.LockType.ADDING) ? 262144 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.CHEST, ArmorStand.LockType.ADDING) ? 524288 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.ADDING) ? 1048576 : 0)
-                + (as.hasEquipmentLock(EquipmentSlot.OFF_HAND, ArmorStand.LockType.ADDING) ? 2097152 : 0);
     }
 
     static boolean toggleSlotsDisabled(ArmorStand as) {
@@ -137,53 +116,6 @@ public class Utils {
         return false;
     }
 
-    static private boolean isEmpty(ItemStack is) {
-        return is == null || is.getType().isAir();
-    }
-
-    static private String itemInfo(ItemStack is) {
-        if (isEmpty(is))
-            return "{}";
-        return ItemStackReflections.itemNBTToString(is);
-    }
-
-    static private String armorItems(EntityEquipment e) {
-        if (e == null || (isEmpty(e.getBoots()) && isEmpty(e.getLeggings()) && isEmpty(e.getChestplate()) && isEmpty(e.getHelmet()))) {
-            return "";
-        }
-        return "ArmorItems:["
-                + itemInfo(e.getBoots()) + ","
-                + itemInfo(e.getLeggings()) + ","
-                + itemInfo(e.getChestplate()) + ","
-                + itemInfo(e.getHelmet())
-                + "],";
-    }
-
-    static private String handItems(EntityEquipment e) {
-        if (e == null || (isEmpty(e.getItemInMainHand()) && isEmpty(e.getItemInOffHand()))) {
-            return "";
-        }
-        return "HandItems:["
-                + itemInfo(e.getItemInMainHand()) + ","
-                + itemInfo(e.getItemInOffHand())
-                + "],";
-    }
-
-    static private String angleInfo(EulerAngle ea) {
-        return "[" + degrees(ea.getX()) + "f," + degrees(ea.getY()) + "f," + degrees(ea.getZ()) + "f]";
-    }
-
-    static private String pose(ArmorStand as) {
-        return "Pose:{"
-                + "Body:" + angleInfo(as.getBodyPose()) + ","
-                + "Head:" + angleInfo(as.getHeadPose()) + ","
-                + "LeftLeg:" + angleInfo(as.getLeftLegPose()) + ","
-                + "RightLeg:" + angleInfo(as.getRightLegPose()) + ","
-                + "LeftArm:" + angleInfo(as.getLeftArmPose()) + ","
-                + "RightArm:" + angleInfo(as.getRightArmPose())
-                + "}";
-    }
-
     static String createSummonCommand(ArmorStand as) {
         final Location asLocation = as.getLocation();
         return "summon minecraft:armor_stand " +
@@ -193,20 +125,13 @@ public class Utils {
                 createEntityTag(as);
     }
 
-    static String quote(String s) {
-        return "\"\\\"" +
-                s.replace("\\", "\\\\\\\\").replace("\"", "\\\\\\\"") // escape " and \
-                + "\\\"\"";
-    }
-
     static ItemStack createArmorStandItem(ArmorStand as) {
         final EntityEquipment equipment = as.getEquipment();
         for (EquipmentSlot slot : EquipmentSlot.values()) {
             if (!canArmorStandItemContain(equipment.getItem(slot)))
                 return null;
         }
-        final ItemStack armorStand = new ItemStack(Material.ARMOR_STAND);
-        ItemStackReflections.setItemNBTFromString(armorStand, "minecraft:armor_stand[entity_data=" + createEntityTag(as) + "]");
+        final ItemStack armorStand = Bukkit.getItemFactory().createItemStack("minecraft:armor_stand[minecraft:entity_data=" + createEntityTag(as) + "]");
         final ItemMeta meta = armorStand.getItemMeta();
         if (meta != null) {
             meta.setLore(createItemLore(as));
@@ -218,37 +143,15 @@ public class Utils {
         return armorStand;
     }
 
+    // Server-internal bookkeeping such as Paper.Origin, which would only point the copy at the original's position
+    private static final Pattern SERVER_INTERNAL_TAGS = Pattern.compile("(?<=[{,])(?:Paper|Spigot|Bukkit)\\.\\w+:(?:\\[[^\\[\\]]*]|\"[^\"]*\"|[^,{}\\[\\]]+),?");
+
+    // The server writes the entity data itself, so the tag always matches the running Minecraft version
     static String createEntityTag(ArmorStand as) {
-        final EntityEquipment e = as.getEquipment();
-        final StringBuilder sb = new StringBuilder("{");
-        sb.append("id:\"minecraft:armor_stand\",");
-        if (!as.isVisible())
-            sb.append("Invisible:1,");
-        if (!as.hasBasePlate())
-            sb.append("NoBasePlate:1,");
-        if (!as.hasGravity())
-            sb.append("NoGravity:1,");
-        if (as.hasArms())
-            sb.append("ShowArms:1,");
-        if (as.isSmall())
-            sb.append("Small:1,");
-        if (as.isInvulnerable())
-            sb.append("Invulnerable:1,");
-        if (as.isGlowing())
-            sb.append("Glowing:1,");
-        if (hasDisabledSlots(as))
-            sb.append("DisabledSlots:").append(disabledSlotsAsInteger(as)).append(",");
-        if (as.isCustomNameVisible())
-            sb.append("CustomNameVisible:1,");
-        if (as.getCustomName() != null)
-            sb.append("CustomName:").append(quote(as.getCustomName())).append(",");
-        if (as.getLocation().getYaw() != 0F)
-            sb.append("Rotation:[").append(twoDec(as.getLocation().getYaw())).append("f],");
-        sb.append(armorItems(e));
-        sb.append(handItems(e));
-        sb.append(pose(as));
-        sb.append("}");
-        return sb.toString();
+        final EntitySnapshot snapshot = as.createSnapshot();
+        if (snapshot == null)
+            return "{id:\"minecraft:armor_stand\"}";
+        return SERVER_INTERNAL_TAGS.matcher(snapshot.getAsString()).replaceAll("").replace(",}", "}");
     }
 
     static List<String> createItemLore(ArmorStand as) {
@@ -319,10 +222,6 @@ public class Utils {
             twoDec.setDecimalFormatSymbols(symbols);
         }
         return twoDec.format(d);
-    }
-
-    private static String degrees(double d) {
-        return twoDec(d * 180.0 / Math.PI);
     }
 
     static boolean hasAnyTools(Player p) {
@@ -430,7 +329,9 @@ public class Utils {
     }
 
     static boolean isConfiguredArmorStandItem(ItemStack item) {
-        return item.getType() == Material.ARMOR_STAND && ItemStackReflections.containsEntityData(item);
+        if (item.getType() != Material.ARMOR_STAND || !item.hasItemMeta())
+            return false;
+        return item.getItemMeta().getAsComponentString().contains("minecraft:entity_data=");
     }
 
     static boolean canArmorStandItemContain(ItemStack item) {

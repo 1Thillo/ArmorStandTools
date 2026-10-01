@@ -70,6 +70,7 @@ public class AST extends JavaPlugin {
         PluginCommand command = getCommand("astools");
         if (command != null) {
             command.setExecutor(cmds);
+            command.setTabCompleter(cmds);
         }
         command = getCommand("ascmd");
         if (command != null) {
