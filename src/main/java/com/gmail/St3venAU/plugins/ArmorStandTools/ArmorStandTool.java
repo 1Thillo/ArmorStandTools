@@ -16,6 +16,7 @@ import org.bukkit.util.EulerAngle;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 
 public enum ArmorStandTool {
@@ -211,6 +212,22 @@ public enum ArmorStandTool {
 
     static boolean isTool(ItemStack is) {
         return get(is) != null;
+    }
+
+    // Unlike isTool this also matches tools renamed in an anvil and tools handed out by older versions without the marker
+    static boolean isToolItem(ItemStack is) {
+        if (is == null || !is.hasItemMeta())
+            return false;
+        final ItemMeta meta = is.getItemMeta();
+        if (meta.getPersistentDataContainer().has(AST.toolKey))
+            return true;
+        if (!meta.hasLore())
+            return false;
+        for (ArmorStandTool t : values()) {
+            if (!t.forGui && t.item.getType() == is.getType() && Objects.equals(t.item.getItemMeta().getLore(), meta.getLore()))
+                return true;
+        }
+        return false;
     }
 
     static boolean isHoldingTool(Player p) {

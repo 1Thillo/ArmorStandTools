@@ -16,6 +16,7 @@ import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.*;
 import org.bukkit.inventory.meta.BlockStateMeta;
+import org.bukkit.inventory.meta.BundleMeta;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.metadata.MetadataValue;
@@ -24,6 +25,7 @@ import org.bukkit.util.Vector;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
@@ -326,6 +328,56 @@ public class Utils {
         }
         clone.setMetadata("clone", new FixedMetadataValue(AST.plugin, true));
         return clone;
+    }
+
+    static boolean containsTool(ItemStack item) {
+        if (item == null || item.getType().isAir())
+            return false;
+        if (ArmorStandTool.isToolItem(item))
+            return true;
+        for (ItemStack content : storedItems(item)) {
+            if (containsTool(content))
+                return true;
+        }
+        return false;
+    }
+
+    // Removes tools from the item and from everything stored inside it, such as bundles and shulker boxes
+    static ItemStack withoutTools(ItemStack item) {
+        if (!containsTool(item))
+            return item;
+        if (ArmorStandTool.isToolItem(item))
+            return null;
+        final ItemMeta meta = item.getItemMeta();
+        if (meta instanceof final BundleMeta bundle) {
+            final List<ItemStack> kept = new ArrayList<>();
+            for (ItemStack content : bundle.getItems()) {
+                final ItemStack cleaned = withoutTools(content);
+                if (cleaned != null)
+                    kept.add(cleaned);
+            }
+            bundle.setItems(kept);
+        } else if (meta instanceof final BlockStateMeta blockStateMeta && blockStateMeta.getBlockState() instanceof final ShulkerBox shulkerBox) {
+            final Inventory inventory = shulkerBox.getInventory();
+            for (int slot = 0; slot < inventory.getSize(); slot++) {
+                inventory.setItem(slot, withoutTools(inventory.getItem(slot)));
+            }
+            blockStateMeta.setBlockState(shulkerBox);
+        }
+        item.setItemMeta(meta);
+        return item;
+    }
+
+    private static List<ItemStack> storedItems(ItemStack item) {
+        if (!item.hasItemMeta())
+            return List.of();
+        final ItemMeta meta = item.getItemMeta();
+        if (meta instanceof final BundleMeta bundle)
+            return bundle.getItems();
+        if (meta instanceof final BlockStateMeta blockStateMeta && blockStateMeta.hasBlockState()
+                && blockStateMeta.getBlockState() instanceof final ShulkerBox shulkerBox)
+            return Arrays.asList(shulkerBox.getInventory().getContents());
+        return List.of();
     }
 
     static boolean isConfiguredArmorStandItem(ItemStack item) {
