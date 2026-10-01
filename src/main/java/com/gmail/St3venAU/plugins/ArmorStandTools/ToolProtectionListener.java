@@ -1,5 +1,6 @@
 package com.gmail.St3venAU.plugins.ArmorStandTools;
 
+import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
@@ -12,6 +13,8 @@ import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareInventoryResultEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
+import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -53,6 +56,25 @@ class ToolProtectionListener implements Listener {
         }
         if (BUNDLE_ACTIONS.contains(event.getAction())
                 && (Utils.containsTool(event.getCurrentItem()) || Utils.containsTool(event.getCursor()))) {
+            event.setCancelled(true);
+        }
+    }
+
+    // Item frames, allays and the like, with either hand. Armor stands get their own event
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.getRightClicked() instanceof ArmorStand)
+            return;
+        final Player p = event.getPlayer();
+        if (Utils.containsTool(p.getInventory().getItem(event.getHand()))) {
+            event.setCancelled(true);
+            p.updateInventory();
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onPlayerSwapHandItems(PlayerSwapHandItemsEvent event) {
+        if (Utils.containsTool(event.getMainHandItem()) || Utils.containsTool(event.getOffHandItem())) {
             event.setCancelled(true);
         }
     }
