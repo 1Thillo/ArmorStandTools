@@ -37,6 +37,8 @@ import java.util.UUID;
 
 public class MainListener implements Listener {
 
+    private static final String PLACE_CHECKED = "astPlaceChecked";
+
     @EventHandler
     public void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent event) {
         if (!(event.getRightClicked() instanceof final ArmorStand as))
@@ -124,12 +126,22 @@ public class MainListener implements Listener {
     public void onEntityPlace(EntityPlaceEvent event) {
         if (event.getEntity() instanceof final ArmorStand as) {
             ArmorStandCmdManager.removeCommandsNotAllowedFor(as, event.getPlayer());
+            as.setMetadata(PLACE_CHECKED, new FixedMetadataValue(AST.plugin, true));
         }
     }
 
+    // Covers dispensers and anything else that spawns an armor stand from an item. Those report DEFAULT, not
+    // DISPENSE_EGG. A player placing one is handled above, right before this event fires for the same entity.
     @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
     public void onCreatureSpawn(CreatureSpawnEvent event) {
-        if (event.getEntity() instanceof final ArmorStand as && event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.DISPENSE_EGG) {
+        if (!(event.getEntity() instanceof final ArmorStand as))
+            return;
+        if (as.hasMetadata(PLACE_CHECKED)) {
+            as.removeMetadata(PLACE_CHECKED, AST.plugin);
+            return;
+        }
+        final CreatureSpawnEvent.SpawnReason reason = event.getSpawnReason();
+        if (reason != CreatureSpawnEvent.SpawnReason.CUSTOM && reason != CreatureSpawnEvent.SpawnReason.COMMAND) {
             ArmorStandCmdManager.removeCommandsNotAllowedFor(as, null);
         }
     }
