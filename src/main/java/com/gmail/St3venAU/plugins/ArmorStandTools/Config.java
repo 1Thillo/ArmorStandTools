@@ -61,7 +61,7 @@ class Config {
 
     static String
             invReturned, asDropped, asVisible, isTrue, isFalse,
-            carrying, cbCreated, size, small, normal, basePlate,
+            carrying, cbCreated, cbNoSpace, size, small, normal, basePlate,
             isOn, isOff, gravity, arms, invul, equip, locked,
             unLocked, notConsole, giveMsg1, giveMsg2, conReload,
             noRelPerm, invalidName, wgNoPerm, currently,
@@ -180,6 +180,7 @@ class Config {
         isFalse = languageConfig.getString("isFalse");
         carrying = languageConfig.getString("carrying");
         cbCreated = languageConfig.getString("cbCreated");
+        cbNoSpace = languageConfig.getString("cbNoSpace");
         size = languageConfig.getString("size");
         small = languageConfig.getString("small");
         normal = languageConfig.getString("normal");

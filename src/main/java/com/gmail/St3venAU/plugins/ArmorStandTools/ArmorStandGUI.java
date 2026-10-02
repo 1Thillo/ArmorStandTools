@@ -5,6 +5,7 @@ import com.destroystokyo.paper.MaterialTags;
 import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -193,8 +194,16 @@ class ArmorStandGUI implements Listener {
                     if (Config.requireCreative && p.getGameMode() != GameMode.CREATIVE) {
                         p.sendMessage(ChatColor.RED + Config.creativeRequired);
                     } else {
-                        Utils.generateCmdBlock(p.getLocation(), command);
-                        Utils.title(p, Config.cbCreated);
+                        // The block at the player's feet is replaced, which may be in someone else's region
+                        final Block target = p.getLocation().getBlock();
+                        if (!target.getType().isAir()) {
+                            p.sendMessage(ChatColor.RED + Config.cbNoSpace);
+                        } else if (!AST.checkBlockPermission(p, target)) {
+                            p.sendMessage(ChatColor.RED + Config.wgNoPerm);
+                        } else {
+                            Utils.generateCmdBlock(target.getLocation(), command);
+                            Utils.title(p, Config.cbCreated);
+                        }
                     }
                 }
                 if (Config.logGeneratedSummonCommands) {
