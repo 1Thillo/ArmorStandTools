@@ -165,6 +165,8 @@ class ArmorStandGUI implements Listener {
             p.sendMessage(ChatColor.RED + Config.generalNoPerm);
             return;
         }
+        // An equipment change from the same tick has not reached the armor stand yet, Pick Up as Item would copy it twice
+        applyArmorStandInventory();
         switch (t) {
             case HEAD, BODY, LARM, RARM, LLEG, RLEG -> {
                 final UUID uuid = p.getUniqueId();
