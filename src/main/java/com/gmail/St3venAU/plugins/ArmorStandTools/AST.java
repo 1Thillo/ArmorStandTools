@@ -11,7 +11,6 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
@@ -345,14 +344,9 @@ public class AST extends JavaPlugin {
     }
 
     static ArmorStand getArmorStand(UUID uuid, World w) {
-        if (uuid != null && w != null) {
-            for (Entity e : w.getEntities()) {
-                if (e instanceof ArmorStand && e.getUniqueId().equals(uuid)) {
-                    return (ArmorStand) e;
-                }
-            }
-        }
-        return null;
+        if (uuid == null || w == null)
+            return null;
+        return w.getEntity(uuid) instanceof final ArmorStand as ? as : null;
     }
 
     // An unknown name has to be looked up at Mojang, which must not block the main thread
