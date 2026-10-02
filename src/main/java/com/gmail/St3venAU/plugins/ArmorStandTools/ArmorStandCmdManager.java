@@ -42,6 +42,24 @@ class ArmorStandCmdManager {
         }
     }
 
+    // Assigned commands are scoreboard tags and travel with armor stand items, so an armor stand placed from an item
+    // only keeps the commands its placer would have been allowed to add. Without a player none are kept.
+    static void removeCommandsNotAllowedFor(ArmorStand as, Player p) {
+        for (String tag : new HashSet<>(as.getScoreboardTags())) {
+            final ArmorStandCmd command;
+            if (tag.startsWith("ast-cmd-")) {
+                command = ArmorStandCmd.fromLegacyTag(tag);
+            } else if (tag.startsWith("ascmd::")) {
+                command = ArmorStandCmd.fromTag(tag);
+            } else {
+                continue;
+            }
+            if (p == null || command == null || !Utils.hasPermissionNode(p, command.type().getAddPermission())) {
+                as.removeScoreboardTag(tag);
+            }
+        }
+    }
+
     public List<ArmorStandCmd> getCommands() {
         commands.sort(null);
         return commands;

@@ -12,8 +12,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
@@ -113,6 +115,20 @@ public class MainListener implements Listener {
                 event.setCancelled(true);
                 asCmdManager.executeCommands(p);
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onEntityPlace(EntityPlaceEvent event) {
+        if (event.getEntity() instanceof final ArmorStand as) {
+            ArmorStandCmdManager.removeCommandsNotAllowedFor(as, event.getPlayer());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        if (event.getEntity() instanceof final ArmorStand as && event.getSpawnReason() == CreatureSpawnEvent.SpawnReason.DISPENSE_EGG) {
+            ArmorStandCmdManager.removeCommandsNotAllowedFor(as, null);
         }
     }
 
