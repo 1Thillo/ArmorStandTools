@@ -13,3 +13,78 @@ commands:
   ascmd:
     description: List/Add/Remove commands assigned to the nearest armor stand
     usage: Usage /ascmd list, /ascmd remove <command_number>, /ascmd add <priority> <delay> <player/console/bungee> <command/bungee_server_name>
+
+permissions:
+  astools.*:
+    description: All ArmorStandTools permissions
+    default: op
+    children:
+      astools.command: true
+      astools.reload: true
+      astools.use: true
+      astools.summon: true
+      astools.clone: true
+      astools.head: true
+      astools.cmdblock: true
+      astools.glow: true
+      astools.ascmd.*: true
+      astools.bypass-wg-flag: true
+  astools.command:
+    description: Use /astools to get the tools
+    default: op
+  astools.reload:
+    description: Reload the config with /astools reload
+    default: op
+  astools.use:
+    description: Use the tools, except the ones with their own permission below
+    default: op
+  astools.summon:
+    description: Summon armor stands with the summon tool, without using an armor stand item
+    default: op
+  astools.clone:
+    description: Clone armor stands. Survival and adventure players pay for the armor stand and its equipment
+    default: op
+  astools.head:
+    description: Give an armor stand the head of a player
+    default: op
+  astools.cmdblock:
+    description: Use the save tool, which creates a command block that summons the armor stand
+    default: op
+  astools.glow:
+    description: Toggle the glow effect
+    default: op
+  astools.bypass-wg-flag:
+    description: Use the tools in WorldGuard regions with the ast flag set to deny
+    default: op
+  astools.ascmd.*:
+    description: All permissions for commands assigned to armor stands
+    default: op
+    children:
+      astools.ascmd.list: true
+      astools.ascmd.add.player: true
+      astools.ascmd.add.console: true
+      astools.ascmd.add.bungee: true
+      astools.ascmd.remove: true
+      astools.ascmd.cooldown: true
+      astools.ascmd.execute: true
+  astools.ascmd.list:
+    description: List the commands assigned to the nearest armor stand
+    default: op
+  astools.ascmd.add.player:
+    description: Assign commands that run as the clicking player. Also needed to keep them when placing an armor stand item
+    default: op
+  astools.ascmd.add.console:
+    description: Assign commands that run as the console. Also needed to keep them when placing an armor stand item
+    default: op
+  astools.ascmd.add.bungee:
+    description: Assign BungeeCord server switches. Also needed to keep them when placing an armor stand item
+    default: op
+  astools.ascmd.remove:
+    description: Remove commands from the nearest armor stand
+    default: op
+  astools.ascmd.cooldown:
+    description: Set or remove the cooldown of the nearest armor stand's commands
+    default: op
+  astools.ascmd.execute:
+    description: Run the commands assigned to an armor stand by right-clicking it
+    default: op
