@@ -1,8 +1,10 @@
 # ArmorStandTools
 
-A full suite of Armor Stand tools for CraftBukkit/Spigot
+A full suite of Armor Stand tools for Paper
 
-Spigot resource page with plugin download: http://www.spigotmc.org/resources/armor-stand-tools.2237/
+This is a fork of [Aurelien30000/ArmorStandTools](https://github.com/Aurelien30000/ArmorStandTools), which is based on
+the original [St3venAU/ArmorStandTools](https://github.com/St3venAU/ArmorStandTools). Neither is maintained any more.
+Downloads are attached to the [releases](https://github.com/1Thillo/ArmorStandTools/releases).
 
 About
 -----
@@ -15,9 +17,9 @@ command that will re-create the armor stand at any time.
 Compatibility
 -------------
 
-- Armor Stand Tools v4.x.x - Spigot/CraftBukkit 1.17, 1.21+
-- Armor Stand Tools v3.x.x - Spigot/CraftBukkit 1.13 - 1.16
-- Armor Stand Tools v2.4.3 - Spigot/CraftBukkit 1.8 - 1.12
+- Armor Stand Tools v4.9.0+ (this fork) - Paper 26.2, Java 25
+- Armor Stand Tools v4.8.x (Aurelien30000) - Paper 1.20.5 - 1.21.1
+- Armor Stand Tools v4.4.x and older (St3venAU) - Spigot/CraftBukkit up to 1.20.6, see the original repository
 
 Features
 --------
@@ -29,7 +31,7 @@ Features
   body you click with the tool (i.e. click near the feet is one extreme, near the top of the head is the other extreme).
 - Full control over armor stand's inventory (armor & items in hands).
 - Pick up and move armor stands.
-- Armor stand cloning tool.
+- Armor stand cloning tool. Players in survival or adventure pay for the armor stand and its equipment.
 - Save tool: Automatically generate a summon command to summon the armor stand in its current state. This can be saved
   to a command block or logged.
 - Pick up as item: Convert an armor stand into an inventory item that when placed like a normal armor stand retains its
@@ -60,10 +62,14 @@ Commands
 Permissions
 -----------
 
+All permissions are declared in plugin.yml and default to op. `astools.*` and `astools.ascmd.*` grant everything below
+them.
+
 - astools.use : Permission for using any of the tools
 - astools.command : Permission for the /astools command
 - astools.reload : Permission to reload the plugin with /astools reload
-- astools.clone: Permission to use the clone tool
+- astools.clone: Permission to use the clone tool (survival and adventure players pay for the armor stand and its
+  equipment)
 - astools.head: Permission to use the player head tool (Ability to specify a player head for an armor stand)
 - astools.summon: Permission to use the summon tool (Summons an armor stand without requiring the materials)
 - astools.cmdblock: Permission to use the save tool (Create a summon command)
@@ -94,6 +100,8 @@ Assigning Commands to Armor Stands
   placeholder %player% - it will be replaced with the players name at time of execution.
 - When a player with the astools.ascmd.execute permission right-clicks on an armor stand, commands assigned to that
   armor stand are executed.
+- Assigned commands are kept by Pick Up as Item. When such an armor stand item is placed, it only keeps the commands the
+  placing player has the matching astools.ascmd.add permission for. Armor stands placed by a dispenser keep none.
 - Warning: Make sure you are careful when assigning console commands. Any player with the astools.ascmd.execute
   permission will be able to execute the command.
 - By default, any command assigned to an armor stand will use the default cooldown set in config.yml. This can be set on

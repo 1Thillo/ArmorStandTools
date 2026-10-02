@@ -1,6 +1,7 @@
 package com.gmail.St3venAU.plugins.ArmorStandTools;
 
 import com.gmail.St3venAU.plugins.ArmorStandTools.hooks.PlotSquaredHook;
+import com.destroystokyo.paper.profile.PlayerProfile;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.flags.StateFlag;
@@ -10,7 +11,6 @@ import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.inventory.ItemStack;
@@ -344,31 +344,29 @@ public class AST extends JavaPlugin {
     }
 
     static ArmorStand getArmorStand(UUID uuid, World w) {
-        if (uuid != null && w != null) {
-            for (Entity e : w.getEntities()) {
-                if (e instanceof ArmorStand && e.getUniqueId().equals(uuid)) {
-                    return (ArmorStand) e;
-                }
-            }
-        }
-        return null;
+        if (uuid == null || w == null)
+            return null;
+        return w.getEntity(uuid) instanceof final ArmorStand as ? as : null;
     }
 
-    @SuppressWarnings("deprecation")
-    static ItemStack getPlayerHead(String playerName) {
-        OfflinePlayer offlinePlayer = Bukkit.getServer().getPlayer(playerName);
-        if (offlinePlayer == null) {
-            offlinePlayer = Bukkit.getOfflinePlayer(playerName);
-        }
-        final ItemStack item = new ItemStack(Material.PLAYER_HEAD);
-        final SkullMeta meta = (SkullMeta) item.getItemMeta();
-        if (meta == null) {
-            Bukkit.getLogger().warning("Skull item meta was null");
-            return item;
-        }
-        meta.setOwningPlayer(offlinePlayer);
-        item.setItemMeta(meta);
-        return item;
+    // An unknown name has to be looked up at Mojang, which must not block the main thread
+    static void setPlayerHead(Player p, ArmorStand as, String playerName) {
+        final Player online = Bukkit.getPlayerExact(playerName);
+        final PlayerProfile profile = online != null ? online.getPlayerProfile() : Bukkit.createProfile(playerName);
+        profile.update().whenComplete((updated, error) -> Bukkit.getScheduler().runTask(plugin, () -> {
+            if (error != null || updated == null || !updated.isComplete()) {
+                p.sendMessage(ChatColor.RED + playerName + " " + Config.invalidName);
+                return;
+            }
+            if (!as.isValid())
+                return;
+            final ItemStack head = new ItemStack(Material.PLAYER_HEAD);
+            final SkullMeta meta = (SkullMeta) head.getItemMeta();
+            meta.setPlayerProfile(updated);
+            head.setItemMeta(meta);
+            as.getEquipment().setHelmet(head);
+            p.sendMessage(ChatColor.GREEN + Config.skullSet);
+        }));
     }
 
     static boolean processInput(Player p, final String in) {
@@ -408,10 +406,7 @@ public class AST extends JavaPlugin {
                         }
                     } else {
                         if (MC_USERNAME_PATTERN.matcher(input).matches()) {
-                            if (as.getEquipment() != null) {
-                                as.getEquipment().setHelmet(getPlayerHead(input));
-                                p.sendMessage(ChatColor.GREEN + Config.skullSet);
-                            }
+                            setPlayerHead(p, as, input);
                         } else {
                             p.sendMessage(ChatColor.RED + input + " " + Config.invalidName);
                         }

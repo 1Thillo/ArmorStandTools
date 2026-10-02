@@ -24,6 +24,7 @@
 # Commands:
 #   /astools                        Give yourself all of the armor stand tools (Note: Clears your inventory)
 #   /astools reload                 Reload the armor stand tools plugin config file
+#   /astools version                Show the plugin and server version (also works from the console)
 #   /ast                            Alias for the /astools
 #   /ascmd add <priority> <delay> <player/console/bungee> <command/bungee_server_name>
 #                                   Add an assigned command to the nearest armor stand. See the assigning commands section below for more info.
@@ -37,7 +38,7 @@
 #   astools.command                 Permission for the /astools command
 #   astools.reload                  Permission to reload the plugin with /astools reload
 #   astools.use                     Permission for using any of the tools (except the ones below that have their own separate permissions)
-#   astools.clone                   Permission to use the clone tool (Clones an armor stand without requiring the materials)
+#   astools.clone                   Permission to use the clone tool (Survival and adventure players pay for the armor stand and its equipment)
 #   astools.summon                  Permission to use the summon tool (Summons an armor stand without requiring the materials)
 #   astools.head                    Permission to use the player head tool (Ability to specify a player head for an armor stand)
 #   astools.cmdblock                Permission to use the save tool (Creates a command block)
@@ -66,6 +67,8 @@
 #     armor stand are executed.
 #   - Warning: Make sure you are careful when assigning console commands. Any player with the astools.ascmd.execute
 #              permission will be able to execute the command.
+#   - Assigned commands are kept by Pick Up as Item. A placed armor stand item only keeps the commands the placing
+#     player has the matching astools.ascmd.add permission for. Dispensed armor stands keep none.
 #   - By default, any command assigned to an armor stand will use the default cooldown set in config.yml. This can be
 #     set on an individual basis using the /ascmd cooldown <ticks> command.
 #   - Bungee commands: These are used to send the player to a different BungeeCord server. E.g. This will add a command
