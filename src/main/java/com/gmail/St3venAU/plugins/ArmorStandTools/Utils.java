@@ -28,7 +28,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -264,7 +266,9 @@ public class Utils {
         final EntityEquipment asEquipment = as.getEquipment();
         final GameMode gameMode = p.getGameMode();
         if (gameMode == GameMode.ADVENTURE || gameMode == GameMode.SURVIVAL) {
-            final List<ItemStack> required = Stream.of(
+            // Equal items are added up, otherwise two hands holding the same stack would only be paid for once
+            final Map<ItemStack, Integer> required = new LinkedHashMap<>();
+            Stream.of(
                             new ItemStack(Material.ARMOR_STAND),
                             asEquipment.getHelmet(),
                             asEquipment.getChestplate(),
@@ -274,16 +278,22 @@ public class Utils {
                             asEquipment.getItemInOffHand()
                     )
                     .filter(itemStack -> itemStack != null && !itemStack.getType().isAir())
-                    .toList();
+                    .forEach(itemStack -> required.merge(itemStack.asOne(), itemStack.getAmount(), Integer::sum));
 
-            for (ItemStack itemStack : required) {
-                if (!inventory.containsAtLeast(itemStack, itemStack.getAmount())) {
+            for (Map.Entry<ItemStack, Integer> entry : required.entrySet()) {
+                if (!inventory.containsAtLeast(entry.getKey(), entry.getValue())) {
                     p.sendMessage(ChatColor.RED + Config.generalNoPerm);
                     return null;
                 }
             }
-            for (ItemStack itemStack : required) {
-                inventory.removeItemAnySlot(itemStack);
+            for (Map.Entry<ItemStack, Integer> entry : required.entrySet()) {
+                final ItemStack item = entry.getKey();
+                int left = entry.getValue();
+                while (left > 0) {
+                    final int amount = Math.min(left, item.getMaxStackSize());
+                    inventory.removeItemAnySlot(item.asQuantity(amount));
+                    left -= amount;
+                }
             }
         }
 
