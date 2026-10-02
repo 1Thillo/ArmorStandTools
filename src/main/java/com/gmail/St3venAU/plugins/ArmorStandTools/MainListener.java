@@ -12,17 +12,21 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -32,6 +36,8 @@ import java.util.List;
 import java.util.UUID;
 
 public class MainListener implements Listener {
+
+    private static final String PLACE_CHECKED = "astPlaceChecked";
 
     @EventHandler
     public void onPlayerInteractAtEntity(PlayerInteractAtEntityEvent event) {
@@ -113,6 +119,30 @@ public class MainListener implements Listener {
                 event.setCancelled(true);
                 asCmdManager.executeCommands(p);
             }
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onEntityPlace(EntityPlaceEvent event) {
+        if (event.getEntity() instanceof final ArmorStand as) {
+            ArmorStandCmdManager.removeCommandsNotAllowedFor(as, event.getPlayer());
+            as.setMetadata(PLACE_CHECKED, new FixedMetadataValue(AST.plugin, true));
+        }
+    }
+
+    // Covers dispensers and anything else that spawns an armor stand from an item. Those report DEFAULT, not
+    // DISPENSE_EGG. A player placing one is handled above, right before this event fires for the same entity.
+    @EventHandler(ignoreCancelled = true, priority = EventPriority.MONITOR)
+    public void onCreatureSpawn(CreatureSpawnEvent event) {
+        if (!(event.getEntity() instanceof final ArmorStand as))
+            return;
+        if (as.hasMetadata(PLACE_CHECKED)) {
+            as.removeMetadata(PLACE_CHECKED, AST.plugin);
+            return;
+        }
+        final CreatureSpawnEvent.SpawnReason reason = event.getSpawnReason();
+        if (reason != CreatureSpawnEvent.SpawnReason.CUSTOM && reason != CreatureSpawnEvent.SpawnReason.COMMAND) {
+            ArmorStandCmdManager.removeCommandsNotAllowedFor(as, null);
         }
     }
 
@@ -215,7 +245,7 @@ public class MainListener implements Listener {
         if (event.isCancelled() || !(event.getWhoClicked() instanceof final Player p))
             return;
         final ItemStack item = event.getCurrentItem();
-        if (event.getInventory().getHolder() != p && ArmorStandTool.isTool(item)) {
+        if (isOtherInventoryOpen(event.getView()) && ArmorStandTool.isTool(item)) {
             event.setCancelled(true);
             p.updateInventory();
             return;
@@ -228,11 +258,16 @@ public class MainListener implements Listener {
         }
     }
 
+    // The ender chest counts the player as its holder, so the holder alone does not tell the own inventory apart
+    private static boolean isOtherInventoryOpen(InventoryView view) {
+        return view.getTopInventory().getType() != InventoryType.CRAFTING;
+    }
+
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         if (event.isCancelled() || !(event.getWhoClicked() instanceof final Player p))
             return;
-        if (event.getInventory().getHolder() != p && Utils.containsItems(event.getNewItems().values())) {
+        if (isOtherInventoryOpen(event.getView()) && Utils.containsItems(event.getNewItems().values())) {
             event.setCancelled(true);
             p.updateInventory();
         }
