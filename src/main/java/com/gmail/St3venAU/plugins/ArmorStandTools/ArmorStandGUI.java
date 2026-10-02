@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
+import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
@@ -96,13 +97,17 @@ class ArmorStandGUI implements Listener {
             return;
         HandlerList.unregisterAll(this);
         inUse.remove(as.getEntityId());
+        // Whatever happened in the GUI, the armor stand ends up with exactly what the GUI shows
+        applyArmorStandInventory();
     }
 
     @EventHandler
     public void onInventoryClick(InventoryClickEvent event) {
         if (!event.getInventory().equals(i) || !(event.getWhoClicked() instanceof final Player p))
             return;
-        if (event.getClick() == ClickType.SHIFT_RIGHT || event.getClick() == ClickType.NUMBER_KEY) {
+        // A double click collects matching items from the equipment slots as well, without the armor stand noticing
+        if (event.getClick() == ClickType.SHIFT_RIGHT || event.getClick() == ClickType.NUMBER_KEY
+                || event.getAction() == InventoryAction.COLLECT_TO_CURSOR) {
             event.setCancelled(true);
             return;
         }
@@ -285,21 +290,26 @@ class ArmorStandGUI implements Listener {
         }
     }
 
+    // The click has not changed the GUI yet, so the slots are read a tick later
     private void updateArmorStandInventory() {
         new BukkitRunnable() {
             @Override
             public void run() {
-                final EntityEquipment equipment = as.getEquipment();
-                if (as == null || i == null)
-                    return;
-                equipment.setItemInMainHand(i.getItem(INV_SLOT_MAIN_HAND));
-                equipment.setItemInOffHand(i.getItem(INV_SLOT_OFF_HAND));
-                equipment.setHelmet(i.getItem(INV_SLOT_HELMET));
-                equipment.setChestplate(i.getItem(INV_SLOT_CHEST));
-                equipment.setLeggings(i.getItem(INV_SLOT_LEGS));
-                equipment.setBoots(i.getItem(INV_SLOT_BOOTS));
+                applyArmorStandInventory();
             }
         }.runTaskLater(AST.plugin, 1L);
+    }
+
+    private void applyArmorStandInventory() {
+        if (as == null || i == null)
+            return;
+        final EntityEquipment equipment = as.getEquipment();
+        equipment.setItemInMainHand(i.getItem(INV_SLOT_MAIN_HAND));
+        equipment.setItemInOffHand(i.getItem(INV_SLOT_OFF_HAND));
+        equipment.setHelmet(i.getItem(INV_SLOT_HELMET));
+        equipment.setChestplate(i.getItem(INV_SLOT_CHEST));
+        equipment.setLeggings(i.getItem(INV_SLOT_LEGS));
+        equipment.setBoots(i.getItem(INV_SLOT_BOOTS));
     }
 
 }
