@@ -21,10 +21,12 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.EntityEquipment;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.InventoryView;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -231,7 +233,7 @@ public class MainListener implements Listener {
         if (event.isCancelled() || !(event.getWhoClicked() instanceof final Player p))
             return;
         final ItemStack item = event.getCurrentItem();
-        if (event.getInventory().getHolder() != p && ArmorStandTool.isTool(item)) {
+        if (isOtherInventoryOpen(event.getView()) && ArmorStandTool.isTool(item)) {
             event.setCancelled(true);
             p.updateInventory();
             return;
@@ -244,11 +246,16 @@ public class MainListener implements Listener {
         }
     }
 
+    // The ender chest counts the player as its holder, so the holder alone does not tell the own inventory apart
+    private static boolean isOtherInventoryOpen(InventoryView view) {
+        return view.getTopInventory().getType() != InventoryType.CRAFTING;
+    }
+
     @EventHandler
     public void onInventoryDrag(InventoryDragEvent event) {
         if (event.isCancelled() || !(event.getWhoClicked() instanceof final Player p))
             return;
-        if (event.getInventory().getHolder() != p && Utils.containsItems(event.getNewItems().values())) {
+        if (isOtherInventoryOpen(event.getView()) && Utils.containsItems(event.getNewItems().values())) {
             event.setCancelled(true);
             p.updateInventory();
         }

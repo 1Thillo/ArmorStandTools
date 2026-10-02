@@ -9,6 +9,7 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareInventoryResultEvent;
@@ -47,6 +48,13 @@ class ToolProtectionListener implements Listener {
             }
             if (Utils.containsTool(event.getCursor())) {
                 event.getView().setCursor(Utils.withoutTools(event.getCursor()));
+                removed = true;
+            }
+            // Number keys and F move an item from the hotbar or off hand without it being clicked
+            final PlayerInventory inventory = event.getWhoClicked().getInventory();
+            final int swapSlot = event.getClick() == ClickType.SWAP_OFFHAND ? 40 : event.getHotbarButton();
+            if (swapSlot >= 0 && Utils.containsTool(inventory.getItem(swapSlot))) {
+                inventory.setItem(swapSlot, Utils.withoutTools(inventory.getItem(swapSlot)));
                 removed = true;
             }
             if (removed) {
