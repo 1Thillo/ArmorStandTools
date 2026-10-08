@@ -9,8 +9,9 @@
 name: Java CI with Maven
 
 on:
-  #push:
-  #  branches: [ "master" ]
+  # Every pushed branch gets a jar under Actions, so nobody needs a local build to test
+  push:
+    branches-ignore: [ "master" ]
   pull_request:
     branches: [ "master" ]
   workflow_dispatch:

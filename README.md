@@ -127,3 +127,12 @@ Config
   This is useful if you plan on creating a lot of armor stands with similar equipment.
 - language.yml - Contains all the strings of text that the player will see. Edit this file if you wish to change the
   text or translate it into a different language.
+
+Development
+-----------
+
+- Requirements: JDK 25 and Maven. Build with `mvn package`, the jar ends up in `target/`.
+- No local setup needed to try a change: every pushed branch is built by GitHub Actions. Open the run under the
+  repository's Actions tab and download the `plugin-jar` artifact.
+- `master` is protected. Work on a branch, open a pull request, and merge once the `build` check is green.
+- Commit messages and pull requests are written in English, one topic per commit.
