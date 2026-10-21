@@ -12,6 +12,8 @@ import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareInventoryResultEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
@@ -67,7 +69,33 @@ class ToolProtectionListener implements Listener {
         if (BUNDLE_ACTIONS.contains(event.getAction())
                 && (Utils.containsTool(event.getCurrentItem()) || Utils.containsTool(event.getCursor()))) {
             event.setCancelled(true);
+            return;
         }
+        // From the off hand or an armor slot a tool can be placed, worn or used outside the tool's own logic
+        if (event.getClickedInventory() instanceof PlayerInventory && isEquipmentSlot(event.getSlot())
+                && Utils.containsTool(event.getCursor())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        // Armor and off hand slots are only part of the player's own inventory view
+        if (event.getView().getTopInventory().getType() != InventoryType.CRAFTING)
+            return;
+        if (!Utils.containsTool(event.getOldCursor()))
+            return;
+        for (int rawSlot : event.getRawSlots()) {
+            if (isEquipmentSlot(event.getView().convertSlot(rawSlot)) && event.getView().getInventory(rawSlot) instanceof PlayerInventory) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    // Slots 36 to 39 hold the armor, 40 the off hand
+    private static boolean isEquipmentSlot(int slot) {
+        return slot >= 36 && slot <= 40;
     }
 
     // Item frames, allays and the like, with either hand. Armor stands get their own event
