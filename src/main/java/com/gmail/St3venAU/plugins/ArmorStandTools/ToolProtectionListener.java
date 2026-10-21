@@ -6,6 +6,7 @@ import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
@@ -114,6 +115,18 @@ class ToolProtectionListener implements Listener {
     @EventHandler(priority = EventPriority.LOWEST)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getHand() == EquipmentSlot.OFF_HAND && Utils.containsTool(event.getItem())) {
+            event.setCancelled(true);
+            event.getPlayer().updateInventory();
+        }
+    }
+
+    // A shelf swaps its items with the player's hotbar on right click, no inventory involved
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onShelfInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null
+                || !(event.getClickedBlock().getBlockData() instanceof org.bukkit.block.data.type.Shelf))
+            return;
+        if (isEditing(event.getPlayer())) {
             event.setCancelled(true);
             event.getPlayer().updateInventory();
         }
