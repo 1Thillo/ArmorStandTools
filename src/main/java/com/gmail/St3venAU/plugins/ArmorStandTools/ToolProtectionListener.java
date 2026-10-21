@@ -1,21 +1,30 @@
 package com.gmail.St3venAU.plugins.ArmorStandTools;
 
+import org.bukkit.block.Shelf;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
+import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareInventoryResultEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -65,7 +74,33 @@ class ToolProtectionListener implements Listener {
         if (BUNDLE_ACTIONS.contains(event.getAction())
                 && (Utils.containsTool(event.getCurrentItem()) || Utils.containsTool(event.getCursor()))) {
             event.setCancelled(true);
+            return;
         }
+        // From the off hand or an armor slot a tool can be placed, worn or used outside the tool's own logic
+        if (event.getClickedInventory() instanceof PlayerInventory && isEquipmentSlot(event.getSlot())
+                && Utils.containsTool(event.getCursor())) {
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onInventoryDrag(InventoryDragEvent event) {
+        // Armor and off hand slots are only part of the player's own inventory view
+        if (event.getView().getTopInventory().getType() != InventoryType.CRAFTING)
+            return;
+        if (!Utils.containsTool(event.getOldCursor()))
+            return;
+        for (int rawSlot : event.getRawSlots()) {
+            if (isEquipmentSlot(event.getView().convertSlot(rawSlot)) && event.getView().getInventory(rawSlot) instanceof PlayerInventory) {
+                event.setCancelled(true);
+                return;
+            }
+        }
+    }
+
+    // Slots 36 to 39 hold the armor, 40 the off hand
+    private static boolean isEquipmentSlot(int slot) {
+        return slot >= 36 && slot <= 40;
     }
 
     // Item frames, allays and the like, with either hand. Armor stands get their own event
@@ -77,6 +112,56 @@ class ToolProtectionListener implements Listener {
         if (Utils.containsTool(p.getInventory().getItem(event.getHand()))) {
             event.setCancelled(true);
             p.updateInventory();
+        }
+    }
+
+    // The main hand is handled by MainListener, which turns the click into a tool action
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getHand() == EquipmentSlot.OFF_HAND && Utils.containsTool(event.getItem())) {
+            event.setCancelled(true);
+            event.getPlayer().updateInventory();
+        }
+    }
+
+    // A shelf swaps its items with the player's hotbar on right click, no inventory involved
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onShelfInteract(PlayerInteractEvent event) {
+        if (event.getAction() != Action.RIGHT_CLICK_BLOCK || event.getClickedBlock() == null
+                || !(event.getClickedBlock().getBlockData() instanceof org.bukkit.block.data.type.Shelf))
+            return;
+        if (isEditing(event.getPlayer())) {
+            event.setCancelled(true);
+            event.getPlayer().updateInventory();
+            return;
+        }
+        // Tools left on a shelf by older versions would otherwise be swapped into the hotbar
+        if (event.getClickedBlock().getState(false) instanceof final Shelf shelf) {
+            removeTools(shelf.getInventory());
+        }
+    }
+
+    // Hoppers and hopper minecarts, e.g. pulling from a shelf or a chest that still holds a tool
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryMoveItem(InventoryMoveItemEvent event) {
+        if (Utils.containsTool(event.getItem())) {
+            event.setCancelled(true);
+            removeTools(event.getSource());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryPickupItem(InventoryPickupItemEvent event) {
+        if (removeTools(event.getItem()))
+            event.setCancelled(true);
+    }
+
+    private static void removeTools(Inventory inventory) {
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            final ItemStack item = inventory.getItem(slot);
+            if (Utils.containsTool(item)) {
+                inventory.setItem(slot, Utils.withoutTools(item));
+            }
         }
     }
 

@@ -148,7 +148,8 @@ public class MainListener implements Listener {
 
     @EventHandler
     public void onBlockPlace(BlockPlaceEvent event) {
-        if (ArmorStandTool.isHoldingTool(event.getPlayer())) {
+        // The item actually placed, which may come from the off hand
+        if (Utils.containsTool(event.getItemInHand())) {
             event.setCancelled(true);
         }
     }
