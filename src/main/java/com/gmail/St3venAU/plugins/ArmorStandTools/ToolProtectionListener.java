@@ -15,7 +15,9 @@ import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.PrepareInventoryResultEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.event.player.PlayerInteractEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -77,6 +79,15 @@ class ToolProtectionListener implements Listener {
         if (Utils.containsTool(p.getInventory().getItem(event.getHand()))) {
             event.setCancelled(true);
             p.updateInventory();
+        }
+    }
+
+    // The main hand is handled by MainListener, which turns the click into a tool action
+    @EventHandler(priority = EventPriority.LOWEST)
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        if (event.getHand() == EquipmentSlot.OFF_HAND && Utils.containsTool(event.getItem())) {
+            event.setCancelled(true);
+            event.getPlayer().updateInventory();
         }
     }
 
