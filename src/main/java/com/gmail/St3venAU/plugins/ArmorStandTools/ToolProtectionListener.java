@@ -1,5 +1,6 @@
 package com.gmail.St3venAU.plugins.ArmorStandTools;
 
+import org.bukkit.block.Shelf;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Item;
@@ -14,6 +15,8 @@ import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryDragEvent;
+import org.bukkit.event.inventory.InventoryMoveItemEvent;
+import org.bukkit.event.inventory.InventoryPickupItemEvent;
 import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.inventory.PrepareInventoryResultEvent;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
@@ -21,6 +24,7 @@ import org.bukkit.event.player.PlayerInteractEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.inventory.EquipmentSlot;
+import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
 
@@ -129,6 +133,35 @@ class ToolProtectionListener implements Listener {
         if (isEditing(event.getPlayer())) {
             event.setCancelled(true);
             event.getPlayer().updateInventory();
+            return;
+        }
+        // Tools left on a shelf by older versions would otherwise be swapped into the hotbar
+        if (event.getClickedBlock().getState(false) instanceof final Shelf shelf) {
+            removeTools(shelf.getInventory());
+        }
+    }
+
+    // Hoppers and hopper minecarts, e.g. pulling from a shelf or a chest that still holds a tool
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryMoveItem(InventoryMoveItemEvent event) {
+        if (Utils.containsTool(event.getItem())) {
+            event.setCancelled(true);
+            removeTools(event.getSource());
+        }
+    }
+
+    @EventHandler(ignoreCancelled = true)
+    public void onInventoryPickupItem(InventoryPickupItemEvent event) {
+        if (removeTools(event.getItem()))
+            event.setCancelled(true);
+    }
+
+    private static void removeTools(Inventory inventory) {
+        for (int slot = 0; slot < inventory.getSize(); slot++) {
+            final ItemStack item = inventory.getItem(slot);
+            if (Utils.containsTool(item)) {
+                inventory.setItem(slot, Utils.withoutTools(item));
+            }
         }
     }
 
